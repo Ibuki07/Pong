@@ -9,35 +9,34 @@ namespace Goal
 {
     public class GoalCore : MonoBehaviour, IBallCollisionHandler
     {
-        public GoalLogic GoalLogic { get; private set; }
+        public GoalScoreLogic ScoreLogic { get; private set; }
         public CancellationToken CancellationToken { get; private set; }
         public UniTask InitializedAsync => _uniTaskCompletionSource.Task;
 
         // --------------------------------------------------
 
         private readonly UniTaskCompletionSource _uniTaskCompletionSource = new UniTaskCompletionSource();
-        private GoalPresentation _goalPresentation;
-        [SerializeField] private Text _goalCountText;
+        private GoalScorePresentation _scorePresentation;
+        [SerializeField] private Text _scoreCountText;
 
         // --------------------------------------------------
 
         public void OnCollisionBall(BallCore ball)
         {
-            ball.BallLogic.OnResetPosition(CancellationToken).Forget();
-            GoalLogic.OnCollisionBall();
+            ball.MoveLogic.ResetPosition(CancellationToken).Forget();
+            ScoreLogic.CountUpScore();
         }
 
         // --------------------------------------------------
 
         private void Start()
         {
-            GoalLogic = new GoalLogic();
-            _goalPresentation = new GoalPresentation(_goalCountText, GoalLogic);
+            ScoreLogic = new GoalScoreLogic();
+            _scorePresentation = new GoalScorePresentation(_scoreCountText, ScoreLogic);
             CancellationToken = this.GetCancellationTokenOnDestroy();
 
             _uniTaskCompletionSource.TrySetResult();
         }
-
 
         private void OnDestroy()
         {

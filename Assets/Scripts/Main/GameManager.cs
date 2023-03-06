@@ -4,7 +4,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Manager
+namespace Managers
 {
     public class GameManager : MonoBehaviour
     {
@@ -13,10 +13,19 @@ namespace Manager
         [SerializeField, Min(1)] private int _maxGoalCount;
         [SerializeField] private Button _restartButton;
 
+        private System.IDisposable _disposable;
+
         // --------------------------------------------------
 
         private async void Start()
         {
+            var bgm = Random.Range(1, 3);
+            SoundManager.Instance.PlayBGM((SoundManager.BGMType)bgm);
+
+
+
+
+
             foreach (var goal in _goal)
             {
                 await goal.InitializedAsync;
@@ -24,7 +33,7 @@ namespace Manager
             }
 
             _restartButton.gameObject.SetActive(false);
-            _ball.BallLogic.Destroyed.Where(isDestroyed => isDestroyed)
+            _ball.MoveLogic.Destroyed.Where(isDestroyed => isDestroyed)
                 .Subscribe(_ =>
                 {
                     _restartButton.gameObject.SetActive(true);
@@ -36,25 +45,35 @@ namespace Manager
                     _restartButton.gameObject.SetActive(false);
                     StartGame();
                 });
+
+            _disposable = Observable.EveryUpdate()
+            .Where(_ => _ball.MoveLogic.Destroyed.Value && Input.GetKeyDown(KeyCode.Return))
+            .Subscribe(_ =>
+            {
+                _restartButton.gameObject.SetActive(false);
+                StartGame();
+            });
         }
 
         private void StartGame()
         {
+            var bgm = Random.Range(1, 3);
+            SoundManager.Instance.PlayBGM((SoundManager.BGMType)bgm);
             foreach (var goal in _goal)
             {
-                goal.GoalLogic.ResetGoalCount();
+                goal.ScoreLogic.ResetScoreCount();
             }
-            _ball.BallLogic.OnCreatedBall();
+            _ball.MoveLogic.OnCreatedBall();
         }
 
 
         private void EndGame(GoalCore goal)
         {
-            goal.GoalLogic.GoalCount
+            goal.ScoreLogic.ScoreCount
                 .Where(goalCount => goalCount >= _maxGoalCount)
                 .Subscribe(_ =>
                 {
-                    _ball.BallLogic.OnDestroyedBall();
+                    _ball.MoveLogic.OnDestroyedBall();
                 });
         }
 

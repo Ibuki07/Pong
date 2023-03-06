@@ -1,4 +1,6 @@
+using UniRx.Triggers;
 using UnityEngine;
+using UniRx;
 
 namespace Wall
 {
@@ -6,13 +8,11 @@ namespace Wall
     {
         private void Start()
         {
-            
-        }
-
-        private void OnTriggerEnter2D(Collider2D collider)
-        {
-            var collisionWallHandler = collider.gameObject.GetComponent<IWallCollisionHandler>();
-            collisionWallHandler?.OnCollisionWall(this);
+            this.OnTriggerEnter2DAsObservable().Subscribe(collider =>
+            {
+                var collisionWallHandler = collider.gameObject.GetComponent<IWallCollisionHandler>();
+                collisionWallHandler?.OnCollisionWall(this);
+            });
         }
     }
 }
