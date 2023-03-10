@@ -1,18 +1,16 @@
 using UniRx;
-using UnityEngine;
 using UnityEngine.UI;
 using Managers;
-using DG.Tweening;
 
 namespace Option
 {
-    public class OptionAudioSettingLogic
+    public class AudioSettingLogic
     {
 
         private Slider _audioVolumeSlider;
         private SoundManager.SoundType _soundType;
 
-        public OptionAudioSettingLogic(
+        public AudioSettingLogic(
             Slider audioVolumeSlider, 
             SoundManager.SoundType soundType)
         {
@@ -21,6 +19,7 @@ namespace Option
 
             _audioVolumeSlider
                 .OnValueChangedAsObservable()
+                .Skip(1)
                 .Subscribe(volumeValue =>
                 {
                     SoundManager.Instance.SetVolumeValue(soundType, volumeValue);

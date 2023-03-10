@@ -20,7 +20,7 @@ namespace Managers
         public enum SEType
         {
             // SE用の列挙子をゲームに合わせて登録
-            TapToStart,
+            Start,
             ButtonOnClick,
             ButtonOnPointerEnter,
             GameStart,
@@ -35,6 +35,8 @@ namespace Managers
             BGM,
             SE,
         }
+        public UniTask InitializedAsync => _uniTaskCompletionSource.Task;
+        private readonly UniTaskCompletionSource _uniTaskCompletionSource = new UniTaskCompletionSource();
 
         [SerializeField] private float _crossFadeTime = 1.0f;
         [SerializeField] private AudioClip[] _bgmClips;
@@ -44,7 +46,6 @@ namespace Managers
         private AudioSource[] _bgmSources = new AudioSource[2];
         private AudioSource[] _seSources = new AudioSource[32];
         private DataManager _dataManager;
-        private SaveData _saveData;
 
         private float[] _volumeValues = new float[2];
         private bool _isCrossFading;
@@ -54,10 +55,6 @@ namespace Managers
         {
             base.Awake();
             _dataManager = GameObject.FindGameObjectWithTag("DataManager").GetComponent<DataManager>();
-            _saveData = _dataManager.saveData;
-
-            _volumeValues[(int)SoundType.BGM] = _saveData.VolumeValues[(int)SoundType.BGM];
-            _volumeValues[(int)SoundType.SE] = _saveData.VolumeValues[(int)SoundType.SE];
 
             // BGM用 AudioSource追加
             _bgmSources[0] = gameObject.AddComponent<AudioSource>();
@@ -73,6 +70,10 @@ namespace Managers
 
         private void Start()
         {
+            _volumeValues[(int)SoundType.BGM] = _dataManager.SaveData.VolumeValues[(int)SoundType.BGM];
+            _volumeValues[(int)SoundType.SE] = _dataManager.SaveData.VolumeValues[(int)SoundType.SE];
+
+
             Observable.EveryUpdate().Subscribe(_ =>
             {
                 // ボリューム設定
@@ -88,25 +89,10 @@ namespace Managers
                 }
             }).AddTo(this);
 
+            _uniTaskCompletionSource.TrySetResult();
         }
 
-
-        void Update()
-        {
-            //// ボリューム設定
-            //if (!_isCrossFading)
-            //{
-            //    _bgmSources[0].volume = _volumeValues[(int)SoundType.BGM];
-            //    _bgmSources[1].volume = _volumeValues[(int)SoundType.BGM];
-            //}
-
-            //foreach (AudioSource source in _seSources)
-            //{
-            //    source.volume = _volumeValues[(int)SoundType.SE];
-            //}
-        }
-
-        /// BGM再生
+        // BGM再生
         public void PlayBGM(BGMType bgmType, bool loopFlg = true)
         {
             // BGMなしの状態にする場合            
@@ -237,17 +223,19 @@ namespace Managers
         public float GetVolumeValue(SoundType soundType)
         {
             int index = (int)soundType;
-            return _volumeValues[index];
+            return _dataManager.SaveData.VolumeValues[index];
         }
 
         public void SetVolumeValue(SoundType soundType, float volumeValue)
         {
             int index = (int)soundType;
             _volumeValues[index] = volumeValue;
-            _saveData.VolumeValues[index] = volumeValue;
+            _dataManager.SaveData.VolumeValues[index] = (float)System.Math.Round(volumeValue, 2);
         }
 
-
-
+        private void OnDestroy()
+        {
+            _uniTaskCompletionSource.TrySetCanceled();
+        }
     }
 }

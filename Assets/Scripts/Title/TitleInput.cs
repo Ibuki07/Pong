@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using Managers;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,13 +14,18 @@ public class TitleInput
     {
         gameStartButton.OnClickAsObservable().Subscribe(_ =>
         {
+            SoundManager.Instance.PlaySE(SoundManager.SEType.Start);
             _isGameStart.Value = true;
         });
     }
 
     public void OnGameStartInput()
     {
-        _isGameStart.Value = Input.GetKeyDown(KeyCode.Return);
+        if (Input.GetKeyDown(KeyCode.Return))
+        { 
+            SoundManager.Instance.PlaySE(SoundManager.SEType.Start);
+            _isGameStart.Value = true;
+        }
     }
 
 

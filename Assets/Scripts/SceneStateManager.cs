@@ -7,59 +7,61 @@ public class SceneStateManager : SingletonMonoBehaviour<SceneStateManager>
 {
     //-------------------------------------------------------------------
 
-    public enum SCENE_TYPE
+    public enum SceneType
     {
         Title,
         Home,
         StageSelect,
-        Explore,
+        Main,
         Result,
 
     }
 
     //-------------------------------------------------------------------
 
-    public float Duration => _duration;
+    public float FadeDuration => _fadeDuration;
 
     //-------------------------------------------------------------------
 
-    [SerializeField] private Image _imgFade;
-    [SerializeField] private Image _imgLoad;
-    [SerializeField] private CanvasGroup _cgFade;
-    [SerializeField] private float _duration = 1f;
+    [SerializeField] private CanvasGroup _fadeCanvasGroup;
+    [SerializeField] private float _fadeDuration = 1f;
+    
+    private Image _fadeImage;
+    private float _fadeInValue = 0f;
+    private float _fadeOutValue = 1f;
 
     //-------------------------------------------------------------------
 
     protected override void Awake()
     {
         base.Awake();
-
+        _fadeImage = _fadeCanvasGroup.GetComponent<Image>();
     }
 
     //-------------------------------------------------------------------
 
     public void OnFadeIn()
     {
-        _imgFade.gameObject.SetActive(true); // 画像をアクティブにする
-        _imgFade.raycastTarget = true;
+        _fadeImage.gameObject.SetActive(true); // 画像をアクティブにする
+        _fadeImage.raycastTarget = true;
 
-        _cgFade.DOFade(0, _duration)
-            .SetLink(_imgFade.gameObject)
+        _fadeCanvasGroup.DOFade(_fadeInValue, _fadeDuration)
+            .SetLink(_fadeImage.gameObject)
             .OnComplete(() =>
             {
-                _imgFade.raycastTarget = false;
-                //_imgFade.gameObject.SetActive(false); // 画像を非アクティブにする
+                _fadeImage.raycastTarget = false;
             });
     }
 
     /// 引数で指定したシーンへ遷移
-    public void LoadSceneFadeOut(SCENE_TYPE sceneType)
+    public void LoadSceneFadeOut(SceneType sceneType)
     {
-        _imgFade.gameObject.SetActive(true); // 画像をアクティブにする
+        _fadeImage.gameObject.SetActive(true); // 画像をアクティブにする
+        _fadeImage.raycastTarget = true;
 
         // 徐々にポップアップを黒にする(フェードアウト
-        _cgFade.DOFade(1.0f, _duration)
-                .SetLink(_imgFade.gameObject)
+        _fadeCanvasGroup.DOFade(_fadeOutValue, _fadeDuration)
+                .SetLink(_fadeImage.gameObject)
                 .OnComplete(() => 
                 {
                     SceneManager.LoadSceneAsync(sceneType.ToString());

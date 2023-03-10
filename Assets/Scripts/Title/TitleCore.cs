@@ -1,33 +1,39 @@
-using Paddle;
-using System.Collections;
-using System.Collections.Generic;
+using Managers;
 using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TitleCore : MonoBehaviour
 {
 
-    private TitleInput _titleInput;
     [SerializeField] private Button _gameStartButton;
+    [SerializeField] private CanvasGroup titleLogo;
+    [SerializeField] private CanvasGroup startText;
+    
+    private TitleInput _titleInput;
+    private TitlePresentation _titlePresentation;
 
-    void Start()
+    private async void Start()
     {
+        SceneStateManager.Instance.OnFadeIn();
+
+        await SoundManager.Instance.InitializedAsync;
+        SoundManager.Instance.PlayBGM(SoundManager.BGMType.Title);
+
         _titleInput = new TitleInput(_gameStartButton);
+        _titlePresentation = new TitlePresentation(titleLogo, startText);
 
         _titleInput.IsGameStart
             .Where(isGameStart => isGameStart)
             .Take(1)
             .Subscribe(_ =>
             {
-                SceneManager.LoadScene("ClassDesignTest");
+                SceneStateManager.Instance.LoadSceneFadeOut(SceneStateManager.SceneType.Main);
             });
 
-        this.UpdateAsObservable().Subscribe(_ =>
+        Observable.EveryUpdate().Subscribe(_ =>
         {
             _titleInput.OnGameStartInput();
-        });
+        }).AddTo(this);
     }
 }

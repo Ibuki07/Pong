@@ -1,12 +1,11 @@
-using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
 
 namespace Option
 {
-    public class OptionQuitGameLogic
+    public class QuitGameLogic
     {
-        public OptionQuitGameLogic(Button quitGameButton)
+        public QuitGameLogic(Button quitGameButton)
         {
             quitGameButton
                 .OnClickAsObservable()

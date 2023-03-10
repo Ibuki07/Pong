@@ -19,12 +19,10 @@ namespace Managers
 
         private async void Start()
         {
+            SceneStateManager.Instance.OnFadeIn();
+
             var bgm = Random.Range(1, 3);
             SoundManager.Instance.PlayBGM((SoundManager.BGMType)bgm);
-
-
-
-
 
             foreach (var goal in _goal)
             {
