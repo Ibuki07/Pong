@@ -5,43 +5,43 @@ namespace Paddle
 {
     public class PaddleMoveLogic : System.IDisposable
     {
-        private PaddleMoveInput _moveInput;
         private PaddleMoveSimulation _moveSimulation;
         private IPaddleLocalPositionAdapter _paddle;
         private System.IDisposable _disposable;
-        private bool _isMove = true;
+        private bool _isMoving = true;
 
         public PaddleMoveLogic(
             PaddleMoveInput moveInput,
             PaddleMoveSimulation moveSimulation,
             IPaddleLocalPositionAdapter paddle) 
         {
-            _moveInput = moveInput;
             _moveSimulation = moveSimulation;
             _paddle = paddle;
 
             // パドルが"下"方向に移動している時に、"上"方向に入力されたら移動を反転させる
-            _moveInput.MoveDirection
+            moveInput.MoveDirection
                 .Where(isMoveDirection => _moveSimulation.Velocity.y < 0 && isMoveDirection)
                 .Subscribe(_ =>
                 {
-                    _isMove = true;
-                    FlipVerticalVelocity();
-                });
-            // パドルが"上"方向に移動している時に、"下"方向に入力されたら移動を反転させる
-            _moveInput.MoveDirection
-                .Where(isMoveDirection => _moveSimulation.Velocity.y > 0 && !isMoveDirection)
-                .Subscribe(_ =>
-                {
-                    _isMove = true;
+                    _isMoving = true;
                     FlipVerticalVelocity();
                 });
 
-            _disposable = Observable.EveryFixedUpdate()
-                .Where(_ => _moveInput.IsPaddleMoveInput() && _isMove)
+            // パドルが"上"方向に移動している時に、"下"方向に入力されたら移動を反転させる
+            moveInput.MoveDirection
+                .Where(isMoveDirection => _moveSimulation.Velocity.y > 0 && !isMoveDirection)
                 .Subscribe(_ =>
                 {
-                    UpdateLocalPosition(Time.fixedDeltaTime);
+                    _isMoving = true;
+                    FlipVerticalVelocity();
+                });
+
+            // パドルが移動可能であれば、定期的に位置を更新する
+            _disposable = Observable.EveryFixedUpdate()
+                .Where(_ => moveInput.IsPaddleMoveInput() && _isMoving)
+                .Subscribe(_ =>
+                {
+                    UpdatePaddlePosition(Time.fixedDeltaTime);
                 });
         }
 
@@ -50,24 +50,27 @@ namespace Paddle
             _disposable?.Dispose();
         }
 
-        public Vector3 OnRandomizeVerticalVelocity(Vector3 velocity)
+        // パドルのY軸速度をランダム化する
+        public Vector3 RandomizeVerticalVelocity(Vector3 velocity)
         {
-            var rondomVerticalVelocity = Vector3.up * Random.Range(-velocity.y, velocity.y);
-            return rondomVerticalVelocity;
-        }
-        
-        public void OnStopPaddle()
-        {
-            _isMove = false;
+            var randomVerticalVelocity = Vector3.up * Random.Range(-velocity.y, velocity.y);
+            return randomVerticalVelocity;
         }
 
-        private void UpdateLocalPosition(float fixedDeltaTime)
+        // パドルの移動を停止する
+        public void StopPaddle()
+        {
+            _isMoving = false;
+        }
+
+        // パドルの位置を更新する
+        private void UpdatePaddlePosition(float fixedDeltaTime)
         {
             // 位置を更新する
             _paddle.LocalPosition = _moveSimulation.UpdatePosition(_paddle.LocalPosition, fixedDeltaTime);
         }
 
-
+        // パドルのY軸速度を反転させる
         private void FlipVerticalVelocity()
         {
             // 速度を取得します。

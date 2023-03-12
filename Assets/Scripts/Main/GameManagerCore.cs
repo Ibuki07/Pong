@@ -2,14 +2,13 @@ using Ball;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Goal;
-using System.Threading;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Managers
 {
-    public class GameManager : MonoBehaviour
+    public class GameManagerCore : MonoBehaviour
     {
         [SerializeField] private GoalCore[] _goal = new GoalCore[2];
         [SerializeField] private BallCore _ball;
@@ -109,7 +108,6 @@ namespace Managers
             // ゲーム開始テキストを非表示にする
             _gameStartText.gameObject.SetActive(false);
         }
-
 
         private void EndGame(GoalCore goal)
         {

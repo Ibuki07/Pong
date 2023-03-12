@@ -20,18 +20,14 @@ namespace Ball
             set { transform.localPosition = value; }
         }
         public BallMoveLogic MoveLogic { get; private set; }
+
+        // ゲームオブジェクトが破棄されるときにキャンセルされるトークン
         public CancellationToken CancellationToken { get; private set; }
 
+        // 初速度
         [SerializeField] private Vector3 _initialVelocity;
+
         private BallMoveSimulation _moveSimulation;
-
-
-        public void OnCollisionWall(WallCore wall)
-        {
-            MoveLogic.FlipVerticalVelocity();
-            SoundManager.Instance.PlaySE(SE_TYPE.HitWall);
-        }
-
 
         private void Start()
         {
@@ -40,11 +36,12 @@ namespace Ball
             MoveLogic = new BallMoveLogic(_moveSimulation, this);
             CancellationToken = this.GetCancellationTokenOnDestroy();
 
-            // 破壊されたときにゲームオブジェクトを破棄する
+            // ボールが破壊されたときに処理する
             MoveLogic.Destroyed
                 .Where(isDestroyed => isDestroyed)
                 .Subscribe(_ =>
                 {
+                    // ゲームオブジェクトを非アクティブにする
                     this.gameObject.SetActive(false);
                 });
 
@@ -56,15 +53,29 @@ namespace Ball
                     this.gameObject.SetActive(true);
                 });
 
-            this.OnTriggerEnter2DAsObservable().Subscribe(collider =>
-            {
-                var hit = collider.gameObject.GetComponent<IBallCollisionHandler>();
-                hit?.OnCollisionBall(this);
-            });
+            // 他のオブジェクトと衝突したときの処理
+            this.OnTriggerEnter2DAsObservable()
+                .Select(collider => collider.gameObject.GetComponent<IBallCollisionHandler>())
+                .Where(hit => hit != null)
+                .Subscribe(hit =>
+                {
+                    hit.OnCollisionBall(this);
+                })
+                .AddTo(this);
         }
         private void OnDestroy()
         {
             MoveLogic?.Dispose();   
+        }
+
+        // 壁と衝突したときの処理
+        public void OnCollisionWall(WallCore wall)
+        {
+            // Y軸の速度を反転させる
+            MoveLogic.FlipVerticalVelocity();
+
+            // SE を再生する
+            SoundManager.Instance.PlaySE(SE_TYPE.HitWall);
         }
     }
 }

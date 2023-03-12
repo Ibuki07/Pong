@@ -1,21 +1,24 @@
 using Ball;
 using UniRx;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Paddle
 {
     public class PaddleAutoMoveLogic : System.IDisposable
     {
+        // パドルがボールを感知する距離
         public float DetectionRange { get; set; } = 0.2f;
 
         private PaddleAutoMoveInput _autoMoveInput;
         private PaddleMoveSimulation _moveSimulation;
         private IPaddleLocalPositionAdapter _paddle;
         private IBallLocalPositionAdapter _ball;
-        private System.IDisposable _disposable;
+        private System.IDisposable _fixedUpdateDisposable;
+
+        // パドルの中心のx座標
         private float _centerPoint = 0;
-        private bool _isMove = true;
+        // パドルが動いているかどうかのフラグ
+        private bool _isMoving = true;
 
         public PaddleAutoMoveLogic(
             PaddleAutoMoveInput autoMoveInput,
@@ -27,10 +30,13 @@ namespace Paddle
             _moveSimulation = moveSimulation;
             _paddle = paddle;
             _ball = ball;
-            _disposable = Observable.EveryFixedUpdate()
-                .Where(_ => _autoMoveInput.IsAutoMoveInput() && IsMoveTrackingBall() && _isMove)
+
+            // フレーム更新ごとに呼ばれるサブスクリプションを設定する
+            _fixedUpdateDisposable = Observable.EveryFixedUpdate()
+                .Where(_ => _autoMoveInput.IsAutoMoveInput() && IsMoveTrackingBall() && _isMoving)
                 .Subscribe(_ =>
                 {
+                    // パドルの位置を更新する
                     UpdateLocalPosition(Time.fixedDeltaTime);
                 });
 
@@ -38,12 +44,13 @@ namespace Paddle
 
         public void Dispose()
         {
-            _disposable?.Dispose();
+            _fixedUpdateDisposable?.Dispose();
         }
 
         public void OnStopPaddle()
         {
-            _isMove = false;
+            // パドルの動きを止める
+            _isMoving = false;
         }
 
         private void UpdateLocalPosition(float fixedDeltaTime)
@@ -65,21 +72,25 @@ namespace Paddle
             {
                 return isMove;
             }
+            // ボールがパドルの上にある場合は、パドルを上に動かす
             if (_ball.LocalPosition.y > _paddle.LocalPosition.y + DetectionRange)
             {
                 isMove = true;
                 if (_moveSimulation.Velocity.y < _centerPoint)
                 {
-                    _isMove = true;
+                    // パドルの動きを開始し、ボールを反転させる
+                    _isMoving = true;
                     FlipVerticalVelocity();
                 }
             }
+            // ボールがパドルの下にある場合は、パドルを下に動かす
             if (_ball.LocalPosition.y < _paddle.LocalPosition.y - DetectionRange)
             {
                 isMove = true;
                 if (_moveSimulation.Velocity.y > _centerPoint)
                 {
-                    _isMove = true;
+                    // パドルの動きを開始し、ボールを反転させる
+                    _isMoving = true;
                     FlipVerticalVelocity();
                 }
             }

@@ -5,26 +5,33 @@ namespace Paddle
 {
     public class PaddleAutoMovePresentation
     {
-        public float ActiveAlfa { get; private set; } = 0.8f;
-        public float DeactiveAlfa { get; private set; } = 0.4f;
+        // ボタンがアクティブな場合のアルファ値
+        public float ActiveAlpha { get; private set; } = 0.8f;
+        // ボタンが非アクティブな場合のアルファ値
+        public float DeactiveAlpha { get; private set; } = 0.4f;
 
         public PaddleAutoMovePresentation(
             PaddleAutoMoveInput paddleAutoMoveInput,
             CanvasGroup autoModeButtonCanvasGroup)
         {
-            autoModeButtonCanvasGroup.alpha = DeactiveAlfa;
+            // 自動移動が有効になった場合、ボタンのアルファ値を ActiveAlpha に変更
             paddleAutoMoveInput.AutoMove
                 .Where(isAuto => isAuto)
                 .Subscribe(_ =>
                 {
-                    autoModeButtonCanvasGroup.alpha = ActiveAlfa;
+                    autoModeButtonCanvasGroup.alpha = ActiveAlpha;
                 });
+
+            // 自動移動が無効になった場合、ボタンのアルファ値を DeactiveAlpha に変更
             paddleAutoMoveInput.AutoMove
                 .Where(isAuto => !isAuto)
                 .Subscribe(_ =>
                 {
-                    autoModeButtonCanvasGroup.alpha = DeactiveAlfa;
+                    autoModeButtonCanvasGroup.alpha = DeactiveAlpha;
                 });
+
+            // ボタンのアルファ値を初期化
+            autoModeButtonCanvasGroup.alpha = DeactiveAlpha;
         }
     }
 }

@@ -29,29 +29,41 @@ namespace Paddle
         private PaddleAutoMoveInput _autoMoveInput;
         private PaddleAutoMovePresentation _autoMovePresentation;
 
-
+        // ボールと接触した際の処理
         public void OnCollisionBall(BallCore ball)
         {
-            var offsetVerticalVelocity = MoveLogic.OnRandomizeVerticalVelocity(InitialVelocity);
-            ball.MoveLogic.OnAdditionVelocity(offsetVerticalVelocity * 0.5f);
+            // ボールに加える速度のオフセットを計算する
+            var offsetVerticalVelocity = MoveLogic.RandomizeVerticalVelocity(InitialVelocity);
+            ball.MoveLogic.AddVelocity(offsetVerticalVelocity * 0.5f);
+            // ボールの水平速度を反転させる
             ball.MoveLogic.FlipHorizontalVelocity();
+
+            // SEを再生する
             SoundManager.Instance.PlaySE(SE_TYPE.HitPaddle);
         }
 
+        // 壁と接触した際の処理
         public void OnCollisionWall(WallCore wall)
         {
-            MoveLogic.OnStopPaddle();
+            // パドルを停止し、自動移動も停止する
+            MoveLogic.StopPaddle();
             AutoMoveLogic.OnStopPaddle();
         }
 
         private void Start()
         {
-            // 初期化
+            // 移動シミュレーションオブジェクトを初期化する
             _moveSimulation = new PaddleMoveSimulation(InitialVelocity);
+
+            // 入力・シミュレーション・アダプタを使って移動ロジックを初期化する
             _moveInput = new PaddleMoveInput(this);
             MoveLogic = new PaddleMoveLogic(_moveInput, _moveSimulation, this);
+
+            // 自動移動ロジックを初期化する
             _autoMoveInput = new PaddleAutoMoveInput(this, _autoMoveButton);
             AutoMoveLogic = new PaddleAutoMoveLogic(_autoMoveInput, _moveSimulation, this, _ball);
+
+            // 自動移動ボタンのCanvasGroupコンポーネントを取得して、プレゼンテーション用のオブジェクトを初期化する
             var autoModeButtonCanvasGroup = _autoMoveButton.GetComponent<CanvasGroup>();
             _autoMovePresentation = new PaddleAutoMovePresentation(_autoMoveInput, autoModeButtonCanvasGroup);
         }
