@@ -7,11 +7,7 @@ namespace Goal
     {
         public IReadOnlyReactiveProperty<int> ScoreCount => _scoreCount;
 
-        // --------------------------------------------------
-
         private readonly ReactiveProperty<int> _scoreCount = new ReactiveProperty<int>(0);
-
-        // --------------------------------------------------
 
         public void CountUpScore()
         {

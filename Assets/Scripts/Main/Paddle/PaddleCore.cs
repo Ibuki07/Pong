@@ -20,7 +20,6 @@ namespace Paddle
         public PaddleMoveLogic MoveLogic { get; private set; }
         public PaddleAutoMoveLogic AutoMoveLogic { get; private set; }
 
-        // --------------------------------------------------
         [SerializeField] private Button _autoMoveButton;
         [SerializeField] private BallCore _ball;
         [SerializeField] private Vector3 _initialVelocity;
@@ -31,14 +30,12 @@ namespace Paddle
         private PaddleAutoMovePresentation _autoMovePresentation;
 
 
-        // --------------------------------------------------
-
         public void OnCollisionBall(BallCore ball)
         {
             var offsetVerticalVelocity = MoveLogic.OnRandomizeVerticalVelocity(InitialVelocity);
             ball.MoveLogic.OnAdditionVelocity(offsetVerticalVelocity * 0.5f);
             ball.MoveLogic.FlipHorizontalVelocity();
-            SoundManager.Instance.PlaySE(SoundManager.SEType.HitPaddle);
+            SoundManager.Instance.PlaySE(SE_TYPE.HitPaddle);
         }
 
         public void OnCollisionWall(WallCore wall)
@@ -46,8 +43,6 @@ namespace Paddle
             MoveLogic.OnStopPaddle();
             AutoMoveLogic.OnStopPaddle();
         }
-
-        // --------------------------------------------------
 
         private void Start()
         {

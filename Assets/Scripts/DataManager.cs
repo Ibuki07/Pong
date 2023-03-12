@@ -1,70 +1,82 @@
-using Cysharp.Threading.Tasks;
 using System.IO;
 using UnityEngine;
 
-public class DataManager : MonoBehaviour
+namespace Managers
 {
-
-
-    public SaveData SaveData;     // json変換するデータのクラス
-    private string _filePath;                            // jsonファイルのパス
-    private string _fileName = "SaveData.json";              // jsonファイル名
-
-    private void Awake()
+    public class DataManager : MonoBehaviour
     {
-        // パス名取得
-        _filePath = Application.dataPath + "/" + _fileName;
+        // SaveDataクラスのインスタンス
+        public SaveData SaveData = new SaveData();
 
-        // ファイルがないとき、ファイル作成
-        if (!File.Exists(_filePath))
+        // 保存先のパスを保持する変数
+        private string _filePath;
+
+        // 保存するファイル名
+        private const string FileName = "SaveData.json";
+
+        private void Awake()
+        {
+            // 保存先のパスを設定する
+            _filePath = Path.Combine(Application.persistentDataPath, FileName);
+
+            // ファイルが存在しない場合は保存する
+            if (!File.Exists(_filePath))
+            {
+                Save();
+            }
+
+            // ファイルからデータを読み込む
+            Load();
+        }
+
+        private void OnDestroy()
         {
             Save();
         }
 
-        // ファイルを読み込んでdataに格納
-        Load();
-    }
-
-    private void Save()
-    {
-        Debug.Log("SaveData:" + SaveData.VolumeValues[0]);
-        string json = JsonUtility.ToJson(SaveData);
-        StreamWriter streamWriter = new StreamWriter(_filePath);
-        streamWriter.Write(json); 
-        streamWriter.Flush();
-        streamWriter.Close();
-        Debug.Log("JsonNData:" + json);
-    }
-
-    private void Load()
-    {
-        if (File.Exists(_filePath))
+        // SaveDataをJSONファイルに保存する
+        private void Save()
         {
-            StreamReader streamReader;
-            streamReader = new StreamReader(_filePath);
-            string data = streamReader.ReadToEnd();
-            streamReader.Close();
-            SaveData = JsonUtility.FromJson<SaveData>(data);
-            Debug.Log("LoadData:" + SaveData.VolumeValues[0]);
+            // SaveDataをJSON形式の文字列に変換する
+            string json = JsonUtility.ToJson(SaveData);
+
+            // StreamWriterでファイルに書き込む
+            using (StreamWriter streamWriter = new StreamWriter(_filePath))
+            {
+                streamWriter.Write(json);
+            }
         }
-    }
 
-    // ゲーム終了時に保存
-    private void OnDestroy()
-    {
-        Save();
-    }
-
-    // 保存したデータを削除
-    public void DeleteSaveData()
-    {
-        // データを初期化する
-        SaveData = new SaveData();
-        // ファイルを削除する
-        File.Delete(_filePath);
-        if (!File.Exists(_filePath))
+        // JSONファイルからデータを読み込む
+        public void Load()
         {
-            Save();
+            if (File.Exists(_filePath))
+            {
+                // StreamReaderでファイルを読み込み、JSON形式の文字列を取得する
+                using (StreamReader streamReader = new StreamReader(_filePath))
+                {
+                    string data = streamReader.ReadToEnd();
+
+                    // JSON形式の文字列からSaveDataクラスのインスタンスを復元する
+                    SaveData = JsonUtility.FromJson<SaveData>(data);
+                }
+            }
+        }
+
+        // 保存されたデータを削除する
+        public void DeleteSaveData()
+        {
+            // SaveDataのデータを初期化する
+            SaveData = new SaveData();
+
+            // ファイルを削除する
+            File.Delete(_filePath);
+
+            // ファイルが存在しない場合は保存する
+            if (!File.Exists(_filePath))
+            {
+                Save();
+            }
         }
     }
 }

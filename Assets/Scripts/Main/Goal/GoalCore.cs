@@ -13,21 +13,16 @@ namespace Goal
         public CancellationToken CancellationToken { get; private set; }
         public UniTask InitializedAsync => _uniTaskCompletionSource.Task;
 
-        // --------------------------------------------------
-
+        [SerializeField] private Text _scoreCountText;
         private readonly UniTaskCompletionSource _uniTaskCompletionSource = new UniTaskCompletionSource();
         private GoalScorePresentation _scorePresentation;
-        [SerializeField] private Text _scoreCountText;
 
-        // --------------------------------------------------
 
         public void OnCollisionBall(BallCore ball)
         {
             ball.MoveLogic.ResetPosition(CancellationToken).Forget();
             ScoreLogic.CountUpScore();
         }
-
-        // --------------------------------------------------
 
         private void Start()
         {

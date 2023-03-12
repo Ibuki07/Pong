@@ -9,8 +9,6 @@ namespace Paddle
     {
         public float DetectionRange { get; set; } = 0.2f;
 
-        // --------------------------------------------------
-
         private PaddleAutoMoveInput _autoMoveInput;
         private PaddleMoveSimulation _moveSimulation;
         private IPaddleLocalPositionAdapter _paddle;
@@ -18,8 +16,6 @@ namespace Paddle
         private System.IDisposable _disposable;
         private float _centerPoint = 0;
         private bool _isMove = true;
-
-        // --------------------------------------------------
 
         public PaddleAutoMoveLogic(
             PaddleAutoMoveInput autoMoveInput,
@@ -49,8 +45,6 @@ namespace Paddle
         {
             _isMove = false;
         }
-
-        // --------------------------------------------------
 
         private void UpdateLocalPosition(float fixedDeltaTime)
         {

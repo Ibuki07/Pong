@@ -6,8 +6,6 @@ namespace Paddle
     {
         public Vector3 Velocity { get; set; }
 
-        // --------------------------------------------------
-
         public PaddleMoveSimulation(Vector3 initialVelocity)
         {
             // ‘¬“x‚ğ‰Šú‰»‚µ‚Ü‚·B

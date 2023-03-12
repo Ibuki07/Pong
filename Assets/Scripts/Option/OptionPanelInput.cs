@@ -6,79 +6,131 @@ using UnityEngine.UI;
 
 namespace Option
 {
-    public class OptionPanelInput
+    public class OptionPanelInput : System.IDisposable
     {
         public IReadOnlyReactiveProperty<bool> PanelOpen => _panelOpen;
-        private readonly ReactiveProperty<bool> _panelOpen = new ReactiveProperty<bool>(false);
-
-        public IReadOnlyReactiveProperty<bool> AudioSetting => _audioSetting;
-        private readonly ReactiveProperty<bool> _audioSetting = new ReactiveProperty<bool>(false);
-
         public IReadOnlyReactiveProperty<bool> GraphicSetting => _graphicSetting;
-        private readonly ReactiveProperty<bool> _graphicSetting = new ReactiveProperty<bool>(false);
-
+        public IReadOnlyReactiveProperty<bool> AudioSetting => _audioSetting;
+        public IReadOnlyReactiveProperty<bool> QuitGame => _quitGame;
         public IReadOnlyReactiveProperty<int> InfoMessage => _infoMessage;
+
+        private readonly ReactiveProperty<bool> _panelOpen = new ReactiveProperty<bool>(false);
+        private readonly ReactiveProperty<bool> _graphicSetting = new ReactiveProperty<bool>(false);
+        private readonly ReactiveProperty<bool> _audioSetting = new ReactiveProperty<bool>(false);
+        private readonly ReactiveProperty<bool> _quitGame = new ReactiveProperty<bool>(false);
         private readonly ReactiveProperty<int> _infoMessage = new ReactiveProperty<int>(0);
 
+        private System.IDisposable _paenlOpenDisposable;
 
-
-        public OptionPanelInput(
-            List<Button> buttons
-            )
+        public OptionPanelInput(List<Button> optionButtons)
         {
-            var buttonType = OptionCore.ButtonType.PanelOpen;
-            buttons[(int)buttonType].OnClickAsObservable().Subscribe(_ =>
-            {
-                _panelOpen.Value = true;
-            });
+            // PanelOpenボタン
+            var panelOpenButton = optionButtons[(int)OPTION_TYPE.PanelOpen];
+            panelOpenButton.OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    _panelOpen.Value = true;
+                });
 
-            buttonType = OptionCore.ButtonType.GameSetting;
-            SetInfoMessage(buttons[(int)buttonType], buttonType);
+            // GraphicSettingボタン
+            var graphicSettingButton = optionButtons[(int)OPTION_TYPE.GraphicSetting];
+            graphicSettingButton.OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    // 音設定・ゲーム終了画面を閉じる
+                    _audioSetting.Value = false;
+                    _quitGame.Value = false;
+                    // グラフィック設定画面を開く
+                    _graphicSetting.Value = true;
+                });
+            // グラフィック設定ボタンにマウスオーバーした時に表示するメッセージを設定する
+            SetInfoMessage(graphicSettingButton, OPTION_TYPE.GraphicSetting);
 
-            buttonType = OptionCore.ButtonType.GraphicSetting;
-            buttons[(int)buttonType].OnClickAsObservable().Subscribe(_ =>
-            {
-                _audioSetting.Value = false;
-                _graphicSetting.Value = true;
-            });
-            SetInfoMessage(buttons[(int)buttonType], buttonType);
+            // AudioSettingボタン
+            var audioSettingButton = optionButtons[(int)OPTION_TYPE.AudioSetting];
+            audioSettingButton.OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    // グラフィック設定・ゲーム終了画面を閉じる
+                    _graphicSetting.Value = false;
+                    _quitGame.Value = false;
+                    // 音設定画面を開く
+                    _audioSetting.Value = true;
+                });
+            // 音設定ボタンにマウスオーバーした時に表示するメッセージを設定する
+            SetInfoMessage(audioSettingButton, OPTION_TYPE.AudioSetting);
 
-            buttonType = OptionCore.ButtonType.AudioSetting;
-            buttons[(int)buttonType].OnClickAsObservable().Subscribe(_ =>
-            {
-                _graphicSetting.Value = false;
-                _audioSetting.Value = true;
-            });
-            SetInfoMessage(buttons[(int)buttonType], buttonType);
+            // QuitTitleボタン
+            // QuitTitleボタンにマウスオーバーした時に表示するメッセージを設定する
+            SetInfoMessage(optionButtons[(int)OPTION_TYPE.QuitTitle], OPTION_TYPE.QuitTitle);
 
+            // QuitGameボタン
+            var quitGameButton = optionButtons[(int)OPTION_TYPE.QuitGame];
+            quitGameButton.OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    // グラフィック設定・音設定画面を閉じる
+                    _graphicSetting.Value = false;
+                    _audioSetting.Value = false;
+                    // ゲーム終了画面を開く
+                    _quitGame.Value = true;
+                });
+            // ゲーム終了ボタンにマウスオーバーした時に表示するメッセージを設定する
+            SetInfoMessage(quitGameButton, OPTION_TYPE.QuitGame);
 
-            buttonType = OptionCore.ButtonType.QuitTitle;
-            SetInfoMessage(buttons[(int)buttonType], buttonType);
+            // PanelCloseボタン
+            var panelCloseButton = optionButtons[(int)OPTION_TYPE.PanelClose];
+            panelCloseButton.OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    // 全ての設定画面を閉じる
+                    _panelOpen.Value = false;
+                    _graphicSetting.Value = false;
+                    _audioSetting.Value = false;
+                    _quitGame.Value = false;
+                });
+            // パネルを閉じるボタンにマウスオーバーした時に表示するメッセージを設定する
+            SetInfoMessage(panelCloseButton, OPTION_TYPE.PanelClose);
 
-            buttonType = OptionCore.ButtonType.QuitGame;
-            SetInfoMessage(buttons[(int)buttonType], buttonType);
-
-            buttonType = OptionCore.ButtonType.PanelClose;
-            SetInfoMessage(buttons[(int)buttonType], buttonType);
-            buttons[(int)buttonType].OnClickAsObservable().Subscribe(_ =>
-            {
-                _audioSetting.Value = false;
-                _panelOpen.Value = false;
-            });
-
-
-
+            // Escキーが押された時にパネルを開閉する
+            _paenlOpenDisposable = Observable.EveryUpdate()
+                .Where(_ => Input.GetKeyDown(KeyCode.Escape))
+                .Subscribe(_ =>
+                {
+                    if(!_panelOpen.Value)
+                    {
+                        _panelOpen.Value = true;
+                    }
+                    else
+                    {
+                        // 全ての設定パネルを閉じる
+                        _panelOpen.Value = false;
+                        _graphicSetting.Value = false;
+                        _audioSetting.Value = false;
+                        _quitGame.Value = false;
+                    }
+                });
 
         }
 
-        private void SetInfoMessage(Button button, OptionCore.ButtonType messageType)
+        public void Dispose()
         {
-            button
-            .OnPointerEnterAsObservable()
-            .Subscribe(_ =>
-            {
-                _infoMessage.Value = (int)messageType;
-            });
+            _paenlOpenDisposable?.Dispose();
+        }
+
+        // QuitGameをリセットする
+        public void ResetQuitGame()
+        {
+            _quitGame.Value = false;
+        }
+
+        private void SetInfoMessage(Button button, OPTION_TYPE optionType)
+        {
+            button.OnPointerEnterAsObservable()
+                .Subscribe(_ =>
+                {
+                    _infoMessage.Value = (int)optionType;
+                });
         }
     }
 }

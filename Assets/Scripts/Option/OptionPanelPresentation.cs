@@ -1,6 +1,4 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
@@ -14,14 +12,20 @@ namespace Option
         private CanvasGroup _buttonSpace;
         private CanvasGroup _infoMessageBordor;
         private Text _infoMessageText;
+
+        // アニメーションパラメーター
+        private float _verticalMoveValue = 80f;
+        private float _horizontalMoveValue = 80f;
+        private float _fadeOutValue = 0f;
+        private float _fadeInValue = 1.0f;
         private float _duration = 0.5f;
         private float _fastDuration = 0.25f;
         private float _delayTime = 0.25f;
-        
+
+        // ボタンごとの説明文
         private readonly string[] info_message_text =
         {
             "",
-            "ゲーム設定画面を表示します。",
             "グラフィック設定画面を表示します。",
             "音量設定画面を表示します。",
             "タイトルへ戻ります。",
@@ -35,72 +39,63 @@ namespace Option
             CanvasGroup titleLogoBordor,
             CanvasGroup buttonSpace,
             CanvasGroup infoMessageBordor,
-            Text infoMessageText
-            )
+            Text infoMessageText)
         {
             _optionPanel = optionPanel;
             _titleLogoBordor = titleLogoBordor;
             _buttonSpace = buttonSpace;
             _infoMessageBordor = infoMessageBordor;
             _infoMessageText = infoMessageText;
-            _infoMessageText.text = info_message_text[0];
 
+            // InfoMessageの変更を監視し、表示する説明文を切り替える
             panelInput.InfoMessage
                 .Subscribe(infoMessage =>
                 {
-                    switch(infoMessage)
-                    {
-                        case (int)OptionCore.ButtonType.GameSetting:
-                            SetInfoMessageText(OptionCore.ButtonType.GameSetting);
-                            break;
-                        case (int)OptionCore.ButtonType.GraphicSetting:
-                            SetInfoMessageText(OptionCore.ButtonType.GraphicSetting);
-                            break;
-                        case (int)OptionCore.ButtonType.AudioSetting:
-                            SetInfoMessageText(OptionCore.ButtonType.AudioSetting);
-                            break;
-                        case (int)OptionCore.ButtonType.QuitTitle:
-                            SetInfoMessageText(OptionCore.ButtonType.QuitTitle);
-                            break;
-                        case (int)OptionCore.ButtonType.QuitGame:
-                            SetInfoMessageText(OptionCore.ButtonType.QuitGame);
-                            break;
-                        case (int)OptionCore.ButtonType.PanelClose:
-                            SetInfoMessageText(OptionCore.ButtonType.PanelClose);
-                            break;
-                    }
+                    SetInfoMessageText((OPTION_TYPE)infoMessage);
                 });
 
+            // PanelOpenがtrueになった時、説明文を表示する
+            panelInput.PanelOpen
+                .Where(isPanelOpen => isPanelOpen)
+                .Subscribe(_ =>
+                {
+                    SetInfoMessageText(OPTION_TYPE.PanelOpen);
+                });
         }
 
-        private void SetInfoMessageText(OptionCore.ButtonType buttonType)
+        // ボタンごとの説明文を設定するメソッド
+        private void SetInfoMessageText(OPTION_TYPE buttonType)
         {
             _infoMessageText.text = info_message_text[(int)buttonType];
         }
 
-        public void OnDisplayPanelAnimation()
+        // パネルの表示アニメーション
+        public void StartDisplayPanelAnimation()
         {
-            _optionPanel.alpha = 0f;
-            _titleLogoBordor.alpha = 0f;
-            _buttonSpace.alpha = 0f;
-            _infoMessageBordor.alpha = 0f;
+            // UI要素の透明度を設定
+            _optionPanel.alpha = _fadeOutValue;
+            _titleLogoBordor.alpha = _fadeOutValue;
+            _buttonSpace.alpha = _fadeOutValue;
+            _infoMessageBordor.alpha = _fadeOutValue;
 
             Sequence sequence = DOTween.Sequence();
             sequence
-            .Append(_optionPanel.DOFade(1f, _fastDuration))
-            .Append(_titleLogoBordor.transform.DOMoveX(80f, _duration).From())
-            .Join(_titleLogoBordor.DOFade(1f, _duration))
-            .Join(_buttonSpace.transform.DOMoveY(80f, _fastDuration).From().SetDelay(_delayTime))
-            .Join(_buttonSpace.DOFade(1f, _duration));
+                .Append(_optionPanel.DOFade(_fadeInValue, _fastDuration))
+                .Append(_titleLogoBordor.transform.DOMoveX(_verticalMoveValue, _duration).From())
+                .Join(_titleLogoBordor.DOFade(_fadeInValue, _duration))
+                .Join(_buttonSpace.transform.DOMoveY(_horizontalMoveValue, _fastDuration).From().SetDelay(_delayTime))
+                .Join(_buttonSpace.DOFade(_fadeInValue, _duration));
 
             sequence
-            .Append(_infoMessageBordor.DOFade(1f, _duration));
+                .Append(_infoMessageBordor.DOFade(_fadeInValue, _duration));
         }
 
-        public Sequence OnHiddenPanelAnimation()
+        // パネルを非表示にするアニメーション
+        public Sequence StartHiddenPanelAnimation()
         {
             Sequence sequence = DOTween.Sequence();
-            sequence.Append(_optionPanel.DOFade(0f, _fastDuration));
+            sequence
+                .Append(_optionPanel.DOFade(_fadeOutValue, _fastDuration));
 
             return sequence;
         }

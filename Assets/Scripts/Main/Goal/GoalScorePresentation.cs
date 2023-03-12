@@ -7,8 +7,6 @@ namespace Goal
     {
         private Text _scoreCountText;
 
-        // --------------------------------------------------
-
         public GoalScorePresentation(Text text, GoalScoreLogic scoreLogic)
         {
             _scoreCountText = text;

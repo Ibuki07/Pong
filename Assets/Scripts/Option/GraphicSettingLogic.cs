@@ -1,48 +1,18 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UniRx;
 
-public class GraphicSettingLogic
+namespace Option
 {
-    private readonly ReactiveProperty<bool> _fullScreen = new ReactiveProperty<bool>(false);
-
-    public GraphicSettingLogic(Button fullScreenButton) 
+    public class GraphicSettingLogic
     {
-        Image fullScreenButtonImage = fullScreenButton.GetComponent<Image>();
-
-        // フルスクリーン
-        fullScreenButton
-        .OnClickAsObservable()
-        .Where(_ => !_fullScreen.Value)
-        .Subscribe(_ =>
+        public GraphicSettingLogic(GraphicSettingInput input)
         {
-            _fullScreen.Value = true;        
-        });
-
-        // ウィンドウ
-        fullScreenButton
-        .OnClickAsObservable()
-        .Where(_ => _fullScreen.Value)
-        .Subscribe(_ =>
-        {
-            _fullScreen.Value = false;
-        });
-
-        _fullScreen
-        .Where(isFullScreen => isFullScreen)
-        .Subscribe(_ =>
-        {
-            fullScreenButtonImage.color = Color.red;
-            Screen.fullScreen = true;
-        });
-
-        _fullScreen
-        .Where(isFullScreen => !isFullScreen)
-        .Subscribe(_ =>
-        {
-            fullScreenButtonImage.color = Color.white;
-            Screen.fullScreen = false;
-        });
+            // フルスクリーンモードが切り替わるたびに Screen.fullScreen の値を変更する
+            input.FullScreen
+                .Subscribe(isFullScreen =>
+                {
+                    Screen.fullScreen = isFullScreen;
+                });
+        }
     }
-
 }

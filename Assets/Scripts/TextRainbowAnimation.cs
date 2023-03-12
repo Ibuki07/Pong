@@ -14,7 +14,6 @@ public class TextRainbowAnimation : MonoBehaviour
     private static string footer_tag = "</color>";
 
     // 虹色の中身　※ 2桁づつで区切って[00 00 00]＝[ R, G, B ]の値になっている
-    // 　　　　　　※ この配列の要素を追加・編集したらオリジナルの動く色が作れる
     private static string[] color_tag = new string[]
     {
         "ff0000",

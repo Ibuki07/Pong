@@ -6,8 +6,6 @@ namespace Ball
     {
         public Vector3 Velocity;
 
-        // --------------------------------------------------
-
         public BallMoveSimulation(Vector3 initialVelocity)
         {
             // ‘¬“x‚ğ‰Šú‰»‚µ‚Ü‚·B

@@ -22,19 +22,16 @@ namespace Ball
         public BallMoveLogic MoveLogic { get; private set; }
         public CancellationToken CancellationToken { get; private set; }
 
-        // --------------------------------------------------
         [SerializeField] private Vector3 _initialVelocity;
         private BallMoveSimulation _moveSimulation;
 
-        // --------------------------------------------------
 
         public void OnCollisionWall(WallCore wall)
         {
             MoveLogic.FlipVerticalVelocity();
-            SoundManager.Instance.PlaySE(SoundManager.SEType.HitWall);
+            SoundManager.Instance.PlaySE(SE_TYPE.HitWall);
         }
 
-        // --------------------------------------------------
 
         private void Start()
         {
@@ -53,7 +50,6 @@ namespace Ball
 
             MoveLogic.Destroyed
                 .Where(isDestroyed => !isDestroyed)
-                .Skip(1)
                 .Subscribe(async _ =>
                 {
                     await MoveLogic.ResetPosition(CancellationToken);

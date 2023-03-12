@@ -10,8 +10,6 @@ namespace Paddle
         private IPaddleLocalPositionAdapter _paddle;
         private System.IDisposable _disposable;
         private bool _isMove = true;
-        
-        // --------------------------------------------------
 
         public PaddleMoveLogic(
             PaddleMoveInput moveInput,
@@ -62,8 +60,6 @@ namespace Paddle
         {
             _isMove = false;
         }
-
-        // --------------------------------------------------
 
         private void UpdateLocalPosition(float fixedDeltaTime)
         {

@@ -1,37 +1,22 @@
 using UniRx;
-using UnityEngine.UI;
 using Managers;
 
 namespace Option
 {
     public class AudioSettingLogic
     {
-
-        private Slider _audioVolumeSlider;
-        private SoundManager.SoundType _soundType;
-
         public AudioSettingLogic(
-            Slider audioVolumeSlider, 
-            SoundManager.SoundType soundType)
+            AudioSettingInput input,
+            SOUND_TYPE soundType)
         {
-            _audioVolumeSlider = audioVolumeSlider;
-            _soundType = soundType;
-
-            _audioVolumeSlider
-                .OnValueChangedAsObservable()
+            // 音量調節に変更があった場合の処理
+            input.AudioVolume
                 .Skip(1)
-                .Subscribe(volumeValue =>
+                .Subscribe(audioVolume =>
                 {
-                    SoundManager.Instance.SetVolumeValue(soundType, volumeValue);
+                    // SoundManagerのインスタンスに変更を反映
+                    SoundManager.Instance.SetVolumeValue(soundType, audioVolume);
                 });
         }
-
-        public void UpdateSliderValue()
-        {
-            _audioVolumeSlider.value = SoundManager.Instance.GetVolumeValue(_soundType);
-        }
-
     }
-
-
 }

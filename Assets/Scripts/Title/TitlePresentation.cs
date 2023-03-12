@@ -1,41 +1,41 @@
 using DG.Tweening;
 using UnityEngine;
 
-public class TitlePresentation
+namespace Title
 {
-    private float _fadeInDuration = 1f;
-    private float _moveDuration = 1.5f;
-    private float _titleLogoVerticalMoveValue = 80f;
-    private float _fadeInValue = 1f;
-
-    public TitlePresentation(CanvasGroup titleLogo, CanvasGroup startText)
+    public class TitlePresentation
     {
-        titleLogo.alpha = 0.0f;
-        startText.alpha = 0.0f;
+        private float _fadeInDuration = 1f;
+        private float _moveDuration = 1.5f;
+        private float _titleLogoVerticalMoveValue = 80f;
+        private float _fadeOutAlpha = 0f;
+        private float _fadeInAlpha = 1f;
 
-        var sequence = DOTween.Sequence();
-        sequence
-            .Append(titleLogo.transform.DOMoveY(_titleLogoVerticalMoveValue, _moveDuration).From())
-            .Join(titleLogo.DOFade(_fadeInValue, _fadeInDuration))
-            .Append(startText.DOFade(_fadeInValue, _fadeInDuration))
-            .AppendCallback(() => 
-            { 
-                startText.alpha = 0.0f; 
-                startText
-                    .DOFade(_fadeInValue, _fadeInDuration)
-                    .SetEase(Ease.InOutQuad)
-                    .SetLoops(-1, LoopType.Yoyo)
-                    .SetLink(startText.gameObject);
-            });
+        public TitlePresentation(CanvasGroup titleLogo, CanvasGroup startText)
+        {
+            // タイトルロゴとスタートテキストのアルファ値を初期化する
+            titleLogo.alpha = _fadeOutAlpha;
+            startText.alpha = _fadeOutAlpha;
 
+            // アニメーションのシーケンスを作成する
+            var sequence = DOTween.Sequence();
+            sequence
+                // タイトルロゴの移動とフェードインを設定する
+                .Append(titleLogo.transform.DOMoveY(_titleLogoVerticalMoveValue, _moveDuration).From())
+                .Join(titleLogo.DOFade(_fadeInAlpha, _fadeInDuration))
+                // スタートテキストのフェードインを設定する
+                .Append(startText.DOFade(_fadeInAlpha, _fadeInDuration))
+                // スタートテキストのアニメーションを設定する
+                .AppendCallback(() =>
+                {
+                    startText.alpha = _fadeOutAlpha;
+                    startText
+                        .DOFade(_fadeInAlpha, _fadeInDuration)
+                        .SetEase(Ease.InOutQuad)
+                        .SetLoops(-1, LoopType.Yoyo)
+                        .SetLink(startText.gameObject);
+                });
+
+        }
     }
-
-
-
-
-
-
-
-
-
 }

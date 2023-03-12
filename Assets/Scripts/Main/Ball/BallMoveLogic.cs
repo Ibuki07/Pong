@@ -9,15 +9,11 @@ namespace Ball
     {
         public IReadOnlyReactiveProperty<bool> Destroyed => _destroyed;
 
-        // --------------------------------------------------
-
-        private readonly ReactiveProperty<bool> _destroyed = new ReactiveProperty<bool>(false);
+        private readonly ReactiveProperty<bool> _destroyed = new ReactiveProperty<bool>(true);
         private BallMoveSimulation _moveSimulation;
         private IBallLocalPositionAdapter _ball;
         private System.IDisposable _disposable;
         private float _resetPositionDelayTime = 1f;
-
-        // --------------------------------------------------
 
         public BallMoveLogic(
             BallMoveSimulation ballSimulation,

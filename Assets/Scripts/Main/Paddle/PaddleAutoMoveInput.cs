@@ -8,12 +8,8 @@ namespace Paddle
     {
         public IReadOnlyReactiveProperty<bool> AutoMove => _autoMove;
 
-        // --------------------------------------------------
-
         private readonly ReactiveProperty<bool> _autoMove = new ReactiveProperty<bool>(true);
         private IPaddleLocalPositionAdapter _paddlePosition;
-
-        // --------------------------------------------------
 
         public PaddleAutoMoveInput(
             IPaddleLocalPositionAdapter paddlePosition,

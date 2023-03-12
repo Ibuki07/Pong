@@ -3,37 +3,47 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TitleCore : MonoBehaviour
+namespace Title
 {
-
-    [SerializeField] private Button _gameStartButton;
-    [SerializeField] private CanvasGroup titleLogo;
-    [SerializeField] private CanvasGroup startText;
-    
-    private TitleInput _titleInput;
-    private TitlePresentation _titlePresentation;
-
-    private async void Start()
+    public class TitleCore : MonoBehaviour
     {
-        SceneStateManager.Instance.OnFadeIn();
 
-        await SoundManager.Instance.InitializedAsync;
-        SoundManager.Instance.PlayBGM(SoundManager.BGMType.Title);
+        [SerializeField] private Button _gameStartButton;
+        [SerializeField] private CanvasGroup titleLogo;
+        [SerializeField] private CanvasGroup startText;
 
-        _titleInput = new TitleInput(_gameStartButton);
-        _titlePresentation = new TitlePresentation(titleLogo, startText);
+        private TitleInput _titleInput;
+        private TitlePresentation _titlePresentation;
 
-        _titleInput.IsGameStart
-            .Where(isGameStart => isGameStart)
-            .Take(1)
-            .Subscribe(_ =>
-            {
-                SceneStateManager.Instance.LoadSceneFadeOut(SceneStateManager.SceneType.Main);
-            });
-
-        Observable.EveryUpdate().Subscribe(_ =>
+        private void Start()
         {
-            _titleInput.OnGameStartInput();
-        }).AddTo(this);
+            // シーン内のフェードイン処理
+            SceneStateManager.Instance.StartFadeIn();
+
+            // タイトルBGM再生
+            SoundManager.Instance.PlayBGM(BGM_TYPE.Title);
+
+            _titleInput = new TitleInput(_gameStartButton);
+            _titlePresentation = new TitlePresentation(titleLogo, startText);
+
+            // ゲームスタートの入力があった場合の処理
+            _titleInput.IsGameStart
+                .Where(isGameStart => isGameStart)
+                // 一回だけ実行
+                .Take(1) 
+                .Subscribe(_ =>
+                {
+                    // ゲームメインシーンに遷移する
+                    SceneStateManager.Instance.LoadSceneFadeOut(SCENE_TYPE.Main); 
+                });
+
+            // 毎フレーム、ゲームスタートの入力を取得する
+            Observable.EveryUpdate()
+                .Subscribe(_ =>
+                {
+                    _titleInput.OnGameStartInput();
+                })
+                .AddTo(this);
+        }
     }
 }

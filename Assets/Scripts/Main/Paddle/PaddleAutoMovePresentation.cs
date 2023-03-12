@@ -8,8 +8,6 @@ namespace Paddle
         public float ActiveAlfa { get; private set; } = 0.8f;
         public float DeactiveAlfa { get; private set; } = 0.4f;
 
-        // --------------------------------------------------
-
         public PaddleAutoMovePresentation(
             PaddleAutoMoveInput paddleAutoMoveInput,
             CanvasGroup autoModeButtonCanvasGroup)
