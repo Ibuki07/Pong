@@ -1,6 +1,5 @@
 using Ball;
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using Goal;
 using UniRx;
 using UnityEngine;
@@ -17,11 +16,17 @@ namespace Managers
         [SerializeField] private CanvasGroup _gameStartCanvasGroup;
         [SerializeField, Min(1)] private int _maxGoalCount;
 
-        private float _duration = 1.0f;
-        private int _gameStartCountTime = 3;
+        private GameManagerInput _gameManagerInput;
+        private GameManagerLogic _gameManagerLogic;
+        private GameManagerPresentation _gameManagerPresentation;
 
         private async void Start()
         {
+            _gameManagerInput = new GameManagerInput(_restartButton);
+            _gameManagerLogic = new GameManagerLogic();
+            _gameManagerPresentation = new GameManagerPresentation(_gameStartText);
+
+
             // SceneStateManagerを使用してフェードインを開始する
             SceneStateManager.Instance.StartFadeIn();
 
@@ -41,7 +46,8 @@ namespace Managers
                 });
 
             // 再開ボタンがクリックされたら、再開ボタンを非表示にしてゲームを再開する
-            _restartButton.OnClickAsObservable()
+            _gameManagerInput.Restart
+                .Where(isRestart => isRestart)
                 .Subscribe(_ =>
                 {
                     _restartButton.gameObject.SetActive(false);
@@ -50,18 +56,16 @@ namespace Managers
 
             // ボールが破壊された状態でEnterキーが押されたら、再開ボタンを非表示にしてゲームを再開する
             Observable.EveryUpdate()
-                .Where(_ => _ball.MoveLogic.Destroyed.Value && Input.GetKeyDown(KeyCode.Return))
+                .Where(_ => _ball.MoveLogic.Destroyed.Value)
                 .Subscribe(_ =>
                 {
-                    _restartButton.gameObject.SetActive(false);
-                    StartGame().Forget();
+                    _gameManagerInput.IsRestart();
                 })
                 .AddTo(this);
 
             // ボールとゲーム開始テキストを非表示にする
             _ball.gameObject.SetActive(false);
             _restartButton.gameObject.SetActive(false);
-            _gameStartText.text = "";
             _gameStartText.gameObject.SetActive(false);
 
             // フェードインが完了するまで待機する
@@ -69,17 +73,23 @@ namespace Managers
 
             // ゲームを開始する
             StartGame().Forget();
+
         }
 
         // ゲームを開始する
         private async UniTask StartGame()
         {
             // BGMをランダムに再生する
-            var bgm = Random.Range((int)BGM_TYPE.Main_1, (int)BGM_TYPE.Main_3);
-            SoundManager.Instance.PlayBGM((BGM_TYPE)bgm);
+            SoundManager.Instance.PlayBGM(_gameManagerLogic.RandomizeBGM());
 
+            // ゲーム開始テキストを表示する
+            _gameStartText.gameObject.SetActive(true);
+            
             // ゲーム開始アニメーションを再生する
-            await GameStartAnimation();
+            await _gameManagerPresentation.GameStartAnimation();
+            
+            // ゲーム開始テキストを非表示にする
+            _gameStartText.gameObject.SetActive(false);
 
             // ゴールに関するスコアをリセットし、ボールを生成する
             foreach (var goal in _goal)
@@ -87,26 +97,6 @@ namespace Managers
                 goal.ScoreLogic.ResetScoreCount();
             }
             _ball.MoveLogic.OnCreatedBall();
-        }
-
-        // ゲーム開始アニメーションを再生する
-        private async UniTask GameStartAnimation()
-        {
-            // ゲーム開始テキストを表示する
-            _gameStartText.gameObject.SetActive(true);
-            for(int i = _gameStartCountTime; i > 0; i--)
-            {
-                // カウントダウンのアニメーションを再生する
-                _gameStartText.transform.localScale = Vector3.zero;
-                _gameStartText.text = i.ToString();
-                await _gameStartText.transform.DOScale(Vector3.one, _duration);
-            }
-            _gameStartText.transform.localScale = Vector3.zero;
-            _gameStartText.text = "Game Start !";
-            await _gameStartText.transform.DOScale(Vector3.one, _duration);
-            
-            // ゲーム開始テキストを非表示にする
-            _gameStartText.gameObject.SetActive(false);
         }
 
         private void EndGame(GoalCore goal)
@@ -119,7 +109,5 @@ namespace Managers
                     _ball.MoveLogic.OnDestroyedBall();
                 });
         }
-
-
     }
 }
